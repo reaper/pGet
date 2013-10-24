@@ -1,1 +1,1 @@
-Program('curlP.cpp', LIBS=['curl'])
+Program('curlP.cpp', LIBS=['curl', 'PocoNet', 'PocoFoundation'])

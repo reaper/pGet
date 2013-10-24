@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <string>
+#include <Poco/URI.h>
 #include <curl/curl.h>
  
 struct FtpFile {
@@ -88,7 +89,13 @@ static double get_file_size(const std::string url) {
  
 int main(void)
 {
-  printf("filesize: %0.0f bytes\n", get_file_size("http://ftp.gwdg.de/pub/misc/mysql/Downloads/MySQL-5.6/MySQL-5.6.13-1.el6.src.rpm"));
-  download_file("http://ftp.gwdg.de/pub/misc/mysql/Downloads/MySQL-5.6/MySQL-5.6.13-1.el6.src.rpm");
+  Poco::URI uri("ftp://ftp.gwdg.de/pub/misc/mysql/Downloads/MySQL-5.6/MySQL-5.6.13-1.el6.src.rpm");
+  fprintf(stdout, "\nScheme: %s\n", uri.getScheme().c_str());
+  fprintf(stdout, "Host: %s\n", uri.getHost().c_str());
+  fprintf(stdout, "Port: %d\n", uri.getPort());
+  fprintf(stdout, "Path: %s\n\n", uri.getPathEtc().c_str());
+
+  printf("filesize: %0.0f bytes\n", get_file_size(uri.toString()));
+  download_file(uri.toString());
   return 0;
 }
