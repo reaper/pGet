@@ -1,2 +1,5 @@
 env = Environment()
-env.Program(target = "curlP", source = ['curlP.cpp', 'curl/curl_file.cpp'], LIBS=['curl', 'PocoNet', 'PocoFoundation'])
+env.Program (   target = "curlP",
+                source = ['curlP.cpp', 'curl/curl_file.cpp'], 
+                LIBS = ['curl', 'PocoNet', 'PocoFoundation']
+            )

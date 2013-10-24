@@ -1,82 +1,119 @@
 #include "curl_file.hpp"
 
+/**
+ * @brief CurlFile constructor
+ * @param uri
+ */
 CurlFile::CurlFile(const Poco::URI uri) {
   m_uri = uri;
 }
 
+/**
+ * @brief CurlFile destructor
+ */
 CurlFile::~CurlFile() {
 }
 
-
-struct FtpFile {
-  const char *filename;
-  FILE *stream;
-};
-
-size_t CurlFile::my_fwrite(void *buffer, size_t size, size_t nmemb, void *stream)
+/**
+ * @brief fileWrite
+ * @param buffer
+ * @param size
+ * @param nmemb
+ * @param stream
+ * @return 
+ */
+size_t CurlFile::fileWrite(void *buffer, size_t size, size_t nmemb, void *stream)
 {
-  struct FtpFile *out=(struct FtpFile *)stream;
-  if(out && !out->stream) {
-    out->stream=fopen(out->filename, "wb");
-    if(!out->stream)
+  struct CurlFile::File *out=(struct CurlFile::File *)stream;
+  if(out && !out->data) {
+    out->data=fopen(out->name, "wb");
+    if(!out->data)
       return -1;
   }
-
-  return my_fwrite(buffer, size, nmemb, out->stream);
+  return fwrite(buffer, size, nmemb, out->data);
 }
 
+/**
+ * @brief throw away function
+ * @param ptr
+ * @param size
+ * @param nmemb
+ * @param data
+ * @return 
+ */
+size_t CurlFile::throwAway(void *ptr, size_t size, size_t nmemb, void *data)
+{
+  (void)ptr;
+  (void)data;
+  /* we are not interested in the headers itself,
+     so we only return the size we would have saved ... */ 
+  return (size_t)(size * nmemb);
+}
 
-
+/**
+ * @brief Download the file
+ */
 const void CurlFile::download() {
-  struct FtpFile ftpfile={
+  CURL *curl;
+  CURLcode res;
+
+  struct CurlFile::File file = {
     "curl.tar.gz",
     NULL
   };
+ 
   curl_global_init(CURL_GLOBAL_DEFAULT);
-  m_curl = curl_easy_init();
-
-  if(m_curl) {
-    curl_easy_setopt(m_curl, CURLOPT_URL, m_uri.toString().c_str());
-    curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, my_fwrite);
-    curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, &ftpfile);
-    curl_easy_setopt(m_curl, CURLOPT_VERBOSE, 1L);
-
-    m_res = curl_easy_perform(m_curl);
-
-    curl_easy_cleanup(m_curl);
-
-    if(CURLE_OK != m_res) {
-      fprintf(stderr, "curl told us %d\n", m_res);
+ 
+  curl = curl_easy_init();
+  if(curl) {
+    curl_easy_setopt(curl, CURLOPT_URL, m_uri.toString().c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fileWrite);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &file);
+    // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+ 
+    res = curl_easy_perform(curl);
+ 
+    curl_easy_cleanup(curl);
+ 
+    if(CURLE_OK != res) {
+      fprintf(stderr, "curl told us %d\n", res);
     }
   }
-
-  
-
-  if(ftpfile.stream)
-    fclose(ftpfile.stream);
-
+ 
+  if(file.data)
+    fclose(file.data);
+ 
   curl_global_cleanup();
 }
 
+/**
+ * @brief Get the file size
+ * @return 
+ */
 const double CurlFile::get_file_size() {
-  curl_global_init(CURL_GLOBAL_DEFAULT);
-  m_curl = curl_easy_init();
   double fileSize = 0.0;
+  CURL *curl;
+  CURLcode res;
  
-  if(m_curl) {
-    curl_easy_setopt(m_curl, CURLOPT_URL, m_uri.toString().c_str());
-    curl_easy_setopt(m_curl, CURLOPT_NOBODY, 1);
-    m_res = curl_easy_perform(m_curl);
+  curl_global_init(CURL_GLOBAL_DEFAULT);
+ 
+  curl = curl_easy_init();
+  if(curl) {
+    curl_easy_setopt(curl, CURLOPT_URL, m_uri.toString().c_str());
+    curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
+    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, throwAway);
+    curl_easy_setopt(curl, CURLOPT_HEADER, 0L);
+    res = curl_easy_perform(curl);
 
-    if(CURLE_OK == m_res) {
-      m_res = curl_easy_getinfo(m_curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &fileSize);
-      if((CURLE_OK == m_res) && (fileSize > 0.0))
+    if(CURLE_OK == res) {
+      res = curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &fileSize);
+      if((CURLE_OK == res) && (fileSize > 0.0))
         return fileSize;
     }
   }
-
-  curl_easy_cleanup(m_curl);
-  curl_global_cleanup();
  
+  curl_easy_cleanup(curl);
+  curl_global_cleanup();
+
   return 0.0;
 }

@@ -15,6 +15,11 @@
 class CurlFile
 {
 public:
+  struct File {
+    const char *name;
+    FILE *data;
+  };
+
   CurlFile(const Poco::URI uri);
   ~CurlFile();
 
@@ -23,10 +28,8 @@ public:
 
 private:
   Poco::URI m_uri;
-  CURL *m_curl;
-  CURLcode m_res;
-
-  static size_t my_fwrite(void *buffer, size_t size, size_t nmemb, void *stream);
+  static size_t fileWrite(void *buffer, size_t size, size_t nmemb, void *stream);
+  static size_t throwAway(void *ptr, size_t size, size_t nmemb, void *data);
 };
 
 #endif // __CURL_FILE_H_INCLUDED__ 
