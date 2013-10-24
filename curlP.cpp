@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <iostream>
+#include <string>
 #include <curl/curl.h>
  
 struct FtpFile {
@@ -16,10 +18,12 @@ static size_t my_fwrite(void *buffer, size_t size, size_t nmemb, void *stream)
   }
   return fwrite(buffer, size, nmemb, out->stream);
 }
- 
- 
-int main(void)
-{
+
+/**
+ * @brief Download a file
+ * @param url
+ */
+static void download_file(const std::string url) {
   CURL *curl;
   CURLcode res;
   struct FtpFile ftpfile={
@@ -31,7 +35,7 @@ int main(void)
  
   curl = curl_easy_init();
   if(curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, "ftp://ftp.example.com/pub/www/utilities/curl/curl-7.9.2.tar.gz");
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, my_fwrite);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ftpfile);
     curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
@@ -49,6 +53,42 @@ int main(void)
     fclose(ftpfile.stream);
  
   curl_global_cleanup();
+}
+
+/**
+ * @brief Get a file size
+ * @param url
+ * @return double
+ */
+static double get_file_size(const std::string url) {
+  double fileSize = 0.0;
+  CURL *curl;
+  CURLcode res;
  
+  curl_global_init(CURL_GLOBAL_DEFAULT);
+ 
+  curl = curl_easy_init();
+  if(curl) {
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
+    res = curl_easy_perform(curl);
+
+    if(CURLE_OK == res) {
+      res = curl_easy_getinfo(curl, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &fileSize);
+      if((CURLE_OK == res) && (fileSize > 0.0))
+        return fileSize;
+    }
+  }
+ 
+  curl_easy_cleanup(curl);
+  curl_global_cleanup();
+
+  return 0.0;
+}
+ 
+int main(void)
+{
+  printf("filesize: %0.0f bytes\n", get_file_size("http://ftp.gwdg.de/pub/misc/mysql/Downloads/MySQL-5.6/MySQL-5.6.13-1.el6.src.rpm"));
+  download_file("http://ftp.gwdg.de/pub/misc/mysql/Downloads/MySQL-5.6/MySQL-5.6.13-1.el6.src.rpm");
   return 0;
 }
