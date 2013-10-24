@@ -3,6 +3,8 @@
 #include <string>
 #include <Poco/URI.h>
 #include <curl/curl.h>
+
+#include "curl/curl_file.hpp"
  
 struct FtpFile {
   const char *filename;
@@ -24,7 +26,7 @@ static size_t my_fwrite(void *buffer, size_t size, size_t nmemb, void *stream)
  * @brief Download a file
  * @param url
  */
-static void download_file(const std::string url) {
+static void download_file(const Poco::URI uri) {
   CURL *curl;
   CURLcode res;
   struct FtpFile ftpfile={
@@ -36,7 +38,7 @@ static void download_file(const std::string url) {
  
   curl = curl_easy_init();
   if(curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_URL, uri.toString().c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, my_fwrite);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &ftpfile);
     curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
@@ -61,7 +63,7 @@ static void download_file(const std::string url) {
  * @param url
  * @return double
  */
-static double get_file_size(const std::string url) {
+static double get_file_size(const Poco::URI uri) {
   double fileSize = 0.0;
   CURL *curl;
   CURLcode res;
@@ -70,7 +72,7 @@ static double get_file_size(const std::string url) {
  
   curl = curl_easy_init();
   if(curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_URL, uri.toString().c_str());
     curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
     res = curl_easy_perform(curl);
 
@@ -95,7 +97,15 @@ int main(void)
   fprintf(stdout, "Port: %d\n", uri.getPort());
   fprintf(stdout, "Path: %s\n\n", uri.getPathEtc().c_str());
 
-  printf("filesize: %0.0f bytes\n", get_file_size(uri.toString()));
-  download_file(uri.toString());
+  printf("filesize: %0.0f bytes\n", get_file_size(uri));
+  download_file(uri);
+
+
+  CurlFile *curlFile = new CurlFile(uri);
+  // printf("filesize: %0.0f bytes\n", curlFile->get_file_size());
+  // curlFile->download();
+
+  delete curlFile;
+
   return 0;
 }
