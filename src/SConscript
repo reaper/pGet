@@ -1,4 +1,8 @@
 env = Environment()
-opt = env.Clone(CCFLAGS=['-pthread', '-O3', '-Wall'])
-curlP = opt.Program (target = "curlP", source = ['curlP.cpp', 'curl/curl_file.cpp'], LIBS = ['curl', 'PocoNet', 'PocoFoundation'])
+opt = env.Clone(CCFLAGS=['-pthread', '-O3', '-Wall'], CXXFLAGS="-std=c++11")
+
+# Build the program
+curlP = opt.Program (target = "curlP", source = [Glob('**/*.cpp'), 'curlP.cpp'], LIBS = ['curl', 'PocoNet', 'PocoFoundation'])
+
+# Install the binary into a folder
 opt.Install('../bin', curlP)
