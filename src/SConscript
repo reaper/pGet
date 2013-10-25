@@ -1,5 +1,4 @@
 env = Environment()
-env.Program (   target = "curlP",
-                source = ['curlP.cpp', 'curl/curl_file.cpp'], 
-                LIBS = ['curl', 'PocoNet', 'PocoFoundation']
-            )
+opt = env.Clone(CCFLAGS=['-pthread', '-O3', '-Wall'])
+curlP = opt.Program (target = "curlP", source = ['curlP.cpp', 'curl/curl_file.cpp'], LIBS = ['curl', 'PocoNet', 'PocoFoundation'])
+opt.Install('../bin', curlP)
