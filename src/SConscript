@@ -1,5 +1,5 @@
 env = Environment()
-opt = env.Clone(CCFLAGS=['-pthread', '-O3', '-Wall'], CXXFLAGS="-std=c++11")
+opt = env.Clone(CC='clang', CXX='clang++', CCFLAGS=['-pthread', '-O3', '-Wall'], CXXFLAGS="-std=c++11")
 
 # Build the program
 curlP = opt.Program (target = "curlP", source = [Glob('**/*.cpp'), 'curlP.cpp'], LIBS = ['curl', 'PocoNet', 'PocoFoundation'])
