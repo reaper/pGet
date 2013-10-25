@@ -1,9 +1,3 @@
-#include <stdio.h>
-#include <iostream>
-#include <string>
-#include <Poco/URI.h>
-#include <curl/curl.h>
-
 #include "curl/curl_file.hpp"
  
 int main(void)
