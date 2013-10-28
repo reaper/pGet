@@ -9,6 +9,8 @@
 #include <curl/curl.h>
 #include <string>
 #include <iostream>
+#include <pthread.h>
+#include <boost/regex.hpp>
 
 //=================================
 // the actual class
@@ -20,7 +22,7 @@ public:
     FILE *data;
   };
 
-  struct Args {
+  struct ThreadArguments {
     void *classRef;
     std::string fileName;
     std::string chunk;
@@ -29,17 +31,14 @@ public:
   CurlFile(const Poco::URI uri);
   ~CurlFile();
 
-  const void downloadChunk(const std::string& fileName, const std::string& chunk);
+  const void download(const int size);
   const double get_file_size();
-  static void *runChunkDownload(void *args) {
-    CurlFile::Args *arg = (CurlFile::Args*) args;
-    ((CurlFile *) arg->classRef)->downloadChunk(arg->fileName, arg->chunk);
-    return NULL;
-  }
-
+  const Poco::URI getURI();
 private:
   Poco::URI m_uri;
   static size_t fileWrite(void *buffer, size_t size, size_t nmemb, void *stream);
+  static void *downloadChunk(void *args);
+
 };
 
 #endif // __CURL_FILE_H_INCLUDED__ 
