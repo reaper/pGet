@@ -4,7 +4,7 @@ import platform
 env = Environment()
 opt = env.Clone(CC='clang', CXX='clang++', CCFLAGS=['-g', '-pthread', '-O3', '-Wall'], CXXFLAGS="-std=c++11")
 
-boost_libs = ['boost_regex']
+boost_libs = ['boost_regex', 'boost_system']
 
 if os.name == "posix" and platform.system() == "Darwin":
     for index, lib in enumerate(boost_libs):

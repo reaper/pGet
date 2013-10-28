@@ -1,24 +1,14 @@
 #include "curl_file.hpp"
 
+
+boost::mutex CurlFile::m_mutex;
+
 /**
  * @brief CurlFile constructor
  * @param uri
  */
 CurlFile::CurlFile(const Poco::URI uri) {
   m_uri = uri;
-  std::string fileName = uri.getHost();
-
-  boost::regex base_regex("$.*\\/(.*)$");
-  boost::smatch matches;
-
-  std::cout << "TEST" << std::endl;
-  if(boost::regex_match(fileName, matches, base_regex)) {
-    std::cout << "TEST" << std::endl;
-    for (int i = 1; i < matches.size(); i++) {
-      std::string match (matches[i].first, matches[i].second);
-      std::cout << match << std::endl;
-    }
-  }
   curl_global_init(CURL_GLOBAL_ALL);
 }
 
@@ -41,12 +31,15 @@ CurlFile::~CurlFile() {
  */
 size_t CurlFile::fileWrite(void *buffer, size_t size, size_t nmemb, void *stream)
 {
-  struct CurlFile::File *out=(struct CurlFile::File *)stream;
+  struct CurlFile::File *out = (struct CurlFile::File *)stream;
+  boost::mutex::scoped_lock lock(m_mutex);
+
   if(out && !out->data) {
-    out->data=fopen(out->name, "wb");
+    out->data = fopen(out->name, "wb");
     if(!out->data)
       return -1;
   }
+
   return fwrite(buffer, size, nmemb, out->data);
 }
 
@@ -67,13 +60,14 @@ const void CurlFile::download(const int splitSize) {
   int error;
   pthread_t tid[splitSize];
 
-  const int fileSize = get_file_size();
+  const int fileSize = getFileSize();
   const int chunk = fileSize/splitSize;
   int currentChunk = chunk + 2;
+  std::string fileName = searchFileName();
 
   CurlFile::ThreadArguments *arg1 = new CurlFile::ThreadArguments();
   arg1->classRef = this;
-  arg1->fileName = "0";
+  arg1->fileName = fileName;
   arg1->chunk = "0-" + std::to_string(currentChunk);
 
   error = pthread_create(&tid[0], NULL, CurlFile::downloadChunk, arg1);
@@ -85,7 +79,7 @@ const void CurlFile::download(const int splitSize) {
 
     CurlFile::ThreadArguments *arg = new CurlFile::ThreadArguments();
     arg->classRef = this;
-    arg->fileName = std::to_string(i);
+    arg->fileName = fileName;
     arg->chunk = range;
 
     fprintf(stdout, "Launch tread:%d\n", i);
@@ -117,7 +111,7 @@ void *CurlFile::downloadChunk(void *args) {
   CURL *curl;
   struct CurlFile::File file = {
     fileArgs->fileName.c_str(),
-    NULL
+    NULL,
   };
  
   curl = curl_easy_init();
@@ -142,7 +136,7 @@ void *CurlFile::downloadChunk(void *args) {
  * @brief Get the file size
  * @return 
  */
-const double CurlFile::get_file_size() {
+const double CurlFile::getFileSize() {
   double fileSize = 0.0;
   CURL *curl;
   CURLcode res;
@@ -166,4 +160,20 @@ const double CurlFile::get_file_size() {
   curl_easy_cleanup(curl);
 
   return 0.0;
+}
+
+const std::string CurlFile::searchFileName() {
+  std::string fileName = m_uri.getPathEtc();
+
+  boost::regex base_regex("^.*\\/(.*)$");
+  boost::smatch matches;
+
+  if(boost::regex_match(fileName, matches, base_regex)) {
+    for (int i = 1; i < matches.size(); i++) {
+      std::string match (matches[i].first, matches[i].second);
+      return match;
+    }
+  }
+  
+  return NULL;
 }
