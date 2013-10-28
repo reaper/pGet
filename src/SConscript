@@ -1,8 +1,21 @@
+import os
+import platform
+
 env = Environment()
-opt = env.Clone(CC='clang', CXX='clang++', CCFLAGS=['-g', '-pthread', '-O3', '-Wall'], CXXFLAGS="-std=c++11 -stdlib=libc++")
+opt = env.Clone(CC='clang', CXX='clang++', CCFLAGS=['-g', '-pthread', '-O3', '-Wall'], CXXFLAGS="-std=c++11")
+
+boost_libs = ['boost_regex']
+
+if os.name == "posix" and platform.system() == "Darwin":
+    for index, lib in enumerate(boost_libs):
+        concat_lib = lib + "-mt"
+        boost_libs[index] = concat_lib
+
+libs = ['curl', 'PocoFoundation']
+libs.append(boost_libs)
 
 # Build the program
-curlP = opt.Program (target = "curlP", source = [Glob('**/*.cpp'), 'curlP.cpp'], LIBS = ['curl', 'PocoFoundation', 'boost_regex-mt'])
+curlP = opt.Program (target = "curlP", source = [Glob('**/*.cpp'), 'curlP.cpp'], LIBS = libs)
 
 # Install the binary into a folder
 opt.Install('../bin', curlP)
