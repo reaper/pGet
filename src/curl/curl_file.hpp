@@ -20,16 +20,26 @@ public:
     FILE *data;
   };
 
+  struct Args {
+    void *classRef;
+    std::string fileName;
+    std::string chunk;
+  };
+
   CurlFile(const Poco::URI uri);
   ~CurlFile();
 
-  const void download();
+  const void downloadChunk(const std::string& fileName, const std::string& chunk);
   const double get_file_size();
+  static void *runChunkDownload(void *args) {
+    CurlFile::Args *arg = (CurlFile::Args*) args;
+    ((CurlFile *) arg->classRef)->downloadChunk(arg->fileName, arg->chunk);
+    return NULL;
+  }
 
 private:
   Poco::URI m_uri;
   static size_t fileWrite(void *buffer, size_t size, size_t nmemb, void *stream);
-  static size_t throwAway(void *ptr, size_t size, size_t nmemb, void *data);
 };
 
 #endif // __CURL_FILE_H_INCLUDED__ 

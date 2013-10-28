@@ -6,12 +6,14 @@
  */
 CurlFile::CurlFile(const Poco::URI uri) {
   m_uri = uri;
+  curl_global_init(CURL_GLOBAL_ALL);
 }
 
 /**
  * @brief CurlFile destructor
  */
 CurlFile::~CurlFile() {
+  curl_global_cleanup();
 }
 
 /**
@@ -34,56 +36,31 @@ size_t CurlFile::fileWrite(void *buffer, size_t size, size_t nmemb, void *stream
 }
 
 /**
- * @brief throw away function
- * @param ptr
- * @param size
- * @param nmemb
- * @param data
- * @return 
- */
-size_t CurlFile::throwAway(void *ptr, size_t size, size_t nmemb, void *data)
-{
-  (void)ptr;
-  (void)data;
-  /* we are not interested in the headers itself,
-     so we only return the size we would have saved ... */ 
-  return (size_t)(size * nmemb);
-}
-
-/**
  * @brief Download the file
  */
-const void CurlFile::download() {
+const void CurlFile::downloadChunk(const std::string& fileName, const std::string& chunk) {
+  fprintf(stdout, "Filename: %s, Chunk: %s\n", fileName.c_str(), chunk.c_str());
   CURL *curl;
   CURLcode res;
-
   struct CurlFile::File file = {
-    "curl.tar.gz",
+    fileName.c_str(),
     NULL
   };
- 
-  curl_global_init(CURL_GLOBAL_DEFAULT);
  
   curl = curl_easy_init();
   if(curl) {
     curl_easy_setopt(curl, CURLOPT_URL, m_uri.toString().c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fileWrite);
+    curl_easy_setopt(curl, CURLOPT_RANGE, chunk.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &file);
     // curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
  
-    res = curl_easy_perform(curl);
- 
+    curl_easy_perform(curl);
     curl_easy_cleanup(curl);
- 
-    if(CURLE_OK != res) {
-      fprintf(stderr, "curl told us %d\n", res);
-    }
   }
  
   if(file.data)
     fclose(file.data);
- 
-  curl_global_cleanup();
 }
 
 /**
@@ -101,7 +78,6 @@ const double CurlFile::get_file_size() {
   if(curl) {
     curl_easy_setopt(curl, CURLOPT_URL, m_uri.toString().c_str());
     curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
-    curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, throwAway);
     curl_easy_setopt(curl, CURLOPT_HEADER, 0L);
     res = curl_easy_perform(curl);
 
