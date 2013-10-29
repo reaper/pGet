@@ -1,6 +1,5 @@
 #include "curl_file.hpp"
 
-
 boost::mutex CurlFile::m_mutex;
 
 /**
@@ -47,7 +46,7 @@ size_t CurlFile::fileWrite(void *buffer, size_t size, size_t nmemb, void *stream
  * @brief get URI
  * @return Poco::URI
  */
-const Poco::URI CurlFile::getURI() {
+Poco::URI CurlFile::getURI() const {
   return m_uri;
 }
 
@@ -56,7 +55,7 @@ const Poco::URI CurlFile::getURI() {
  * @brief download the file in threads
  * @param size
  */
-const void CurlFile::download(const int splitSize) {
+void CurlFile::download(int splitSize) {
   int error;
   pthread_t tid[splitSize];
 
@@ -136,7 +135,7 @@ void *CurlFile::downloadChunk(void *args) {
  * @brief Get the file size
  * @return 
  */
-const double CurlFile::getFileSize() {
+double CurlFile::getFileSize() const {
   double fileSize = 0.0;
   CURL *curl;
   CURLcode res;
@@ -162,7 +161,11 @@ const double CurlFile::getFileSize() {
   return 0.0;
 }
 
-const std::string CurlFile::searchFileName() {
+/**
+ * @brief search fo the file name in the URI path
+ * @return std::string
+ */
+std::string CurlFile::searchFileName() const {
   std::string fileName = m_uri.getPathEtc();
 
   boost::regex base_regex("^.*\\/(.*)$");

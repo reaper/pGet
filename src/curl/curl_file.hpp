@@ -16,8 +16,8 @@
 
 //=================================
 // the actual class
-class CurlFile
-{
+class CurlFile {
+
 public:
   struct File {
     const char *name;
@@ -34,12 +34,13 @@ public:
   ~CurlFile();
   static boost::mutex m_mutex;
 
-  const void download(const int size);
-  const double getFileSize();
-  const Poco::URI getURI();
+  void download(int splitSize);
+  Poco::URI getURI() const;
+
 private:
   Poco::URI m_uri;
-  const std::string searchFileName();
+  std::string searchFileName() const;
+  double getFileSize() const;
   static size_t fileWrite(void *buffer, size_t size, size_t nmemb, void *stream);
   static void *downloadChunk(void *args);
 
