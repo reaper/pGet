@@ -2,7 +2,7 @@ import os
 import platform
 
 env = Environment()
-opt = env.Clone(CC='clang', CXX='clang++', CCFLAGS=['-g', '-pthread', '-O3', '-Wall'], CXXFLAGS="-std=c++11")
+opt = env.Clone(CC='clang', CXX='clang++', CCFLAGS=['-g', '-O3', '-Wall'], CXXFLAGS="-std=c++11")
 
 boost_libs = ['boost_regex', 'boost_system']
 
@@ -11,7 +11,7 @@ if os.name == "posix" and platform.system() == "Darwin":
         concat_lib = lib + "-mt"
         boost_libs[index] = concat_lib
 
-libs = ['curl', 'PocoFoundation']
+libs = ['curl', 'libcppnetlib-uri']
 libs.append(boost_libs)
 
 # Build the program

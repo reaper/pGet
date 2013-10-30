@@ -6,7 +6,7 @@ boost::mutex CurlFile::m_mutex;
  * @brief CurlFile constructor
  * @param uri
  */
-CurlFile::CurlFile(const Poco::URI uri) {
+CurlFile::CurlFile(const boost::network::uri::uri uri) {
   m_uri = uri;
   curl_global_init(CURL_GLOBAL_ALL);
 }
@@ -46,7 +46,7 @@ size_t CurlFile::fileWrite(void *buffer, size_t size, size_t nmemb, void *stream
  * @brief get URI
  * @return Poco::URI
  */
-Poco::URI CurlFile::getURI() const {
+boost::network::uri::uri CurlFile::getURI() const {
   return m_uri;
 }
 
@@ -115,7 +115,7 @@ void *CurlFile::downloadChunk(void *args) {
  
   curl = curl_easy_init();
   if(curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, ((CurlFile *) fileArgs->classRef)->getURI().toString().c_str());
+    curl_easy_setopt(curl, CURLOPT_URL, ((CurlFile *) fileArgs->classRef)->getURI().string().c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fileWrite);
     curl_easy_setopt(curl, CURLOPT_RANGE, fileArgs->chunk.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &file);
@@ -144,7 +144,7 @@ double CurlFile::getFileSize() const {
  
   curl = curl_easy_init();
   if(curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, m_uri.toString().c_str());
+    curl_easy_setopt(curl, CURLOPT_URL, m_uri.string().c_str());
     curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
     curl_easy_setopt(curl, CURLOPT_HEADER, 0L);
     res = curl_easy_perform(curl);
@@ -166,7 +166,7 @@ double CurlFile::getFileSize() const {
  * @return std::string
  */
 std::string CurlFile::searchFileName() const {
-  std::string fileName = m_uri.getPathEtc();
+  std::string fileName = m_uri.path();
 
   boost::regex base_regex("^.*\\/(.*)$");
   boost::smatch matches;
