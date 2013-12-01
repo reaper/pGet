@@ -38,4 +38,5 @@ scons
 
 TODO
 ====
+- Implement a simple stable project
 - Remove libcurl or cpp-netlib (both doing the same thing...)
