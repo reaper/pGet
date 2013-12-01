@@ -24,7 +24,7 @@ Build bundled dependencies
 ### CPP-NETLIB BUILD
 ```
 cd lib/cpp-netlib
-cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ .
+cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ .
 make -C libs/network/src && cd ../..
 ```
 
