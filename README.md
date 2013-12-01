@@ -35,3 +35,7 @@ Build project
 scons
 ./bin/curlP
 ```
+
+TODO
+====
+- Remove libcurl or cpp-netlib (both doing the same thing...)
