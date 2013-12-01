@@ -173,7 +173,7 @@ std::string CurlFile::searchFileName() const {
 
   if(boost::regex_match(fileName, matches, base_regex)) {
     for (int i = 1; i < matches.size(); i++) {
-      std::string match (matches[i].first, matches[i].second);
+      std::string match (matches[i].first, matches[i].second); // TODO: understand what is done there
       return match;
     }
   }
