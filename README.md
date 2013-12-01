@@ -7,8 +7,8 @@ curlP is a personal c++ project based on the libcurl and boost libraries to be a
 Dependencies
 ============
 
-libcurl - http://curl.haxx.se/libcurl/
-cpp-netlib - http://cpp-netlib.org/
+- libcurl - http://curl.haxx.se/libcurl/
+- cpp-netlib - http://cpp-netlib.org/
 
 
 Init submodules
