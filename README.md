@@ -13,8 +13,9 @@ libcurl - http://curl.haxx.se/libcurl/
 Init submodules
 ===============
 
+```
 git submodule update --init
-
+```
 
 Build bundled dependencies
 ==========================
