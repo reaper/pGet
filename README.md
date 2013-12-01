@@ -8,6 +8,7 @@ Dependencies
 ============
 
 libcurl - http://curl.haxx.se/libcurl/
+cpp-netlib - http://cpp-netlib.org/
 
 
 Init submodules
