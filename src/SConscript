@@ -15,7 +15,7 @@ libs = ['curl', 'libcppnetlib-uri']
 libs.append(boost_libs)
 
 # Build the program
-curlP = opt.Program (target = "curlP", source = [Glob('**/*.cpp'), 'curlP.cpp'], LIBS = libs)
+curlP = opt.Program (target = "curlP", source = [Glob('**/*.cpp'), 'curlP.cpp'], LIBS = libs, CPPPATH = ['../lib/cpp-netlib'], LIBPATH = ['../lib/cpp-netlib/libs/network/src'])
 
 # Install the binary into a folder
 opt.Install('../bin', curlP)
