@@ -17,8 +17,19 @@ git submodule update --init
 
 
 Build bundled dependencies
-==================
-#### CPP-NETLIB BUILD
+==========================
+
+### CPP-NETLIB BUILD
+```
 cd lib/cpp-netlib
 cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ .
 make -C libs/network/src && cd ../..
+```
+
+
+Build project
+=============
+```
+scons
+./bin/curlP
+```
