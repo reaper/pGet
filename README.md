@@ -7,6 +7,7 @@ curlP is a personal c++ project based on the libcurl and boost libraries to be a
 Dependencies
 ============
 
+- clang - http://clang.llvm.org
 - libcurl - http://curl.haxx.se/libcurl/
 - cpp-netlib - http://cpp-netlib.org/
 
@@ -24,7 +25,7 @@ Build bundled dependencies
 ### CPP-NETLIB BUILD
 ```
 cd lib/cpp-netlib
-cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ .
+CXXFLAGS="-ftemplate-depth=256" cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ .
 make -C libs/network/src && cd ../..
 ```
 
