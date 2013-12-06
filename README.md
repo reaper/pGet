@@ -1,7 +1,7 @@
-curlP
+pGet
 =====
 
-curlP is a personal c++ project based on the libcurl and boost libraries to be able to download many chunks of a a file in separated threads.
+pGet is a personal c++ project based on the libcurl and boost libraries to be able to download many chunks of a a file in separated threads.
 
 
 Dependencies
