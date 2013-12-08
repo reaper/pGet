@@ -1,10 +1,6 @@
-//=================================
-// include guard
-#ifndef __CURL_FILE_H_INCLUDED__
-#define __CURL_FILE_H_INCLUDED__
+#ifndef __PGET_FILE_H_INCLUDED__
+#define __PGET_FILE_H_INCLUDED__
 
-//=================================
-// included dependencies
 #include <curl/curl.h>
 #include <string>
 #include <iostream>
@@ -13,9 +9,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/network/uri.hpp>
 
-//=================================
-// the actual class
-class CurlFile {
+class PgetFile {
 
 public:
   struct File {
@@ -29,11 +23,11 @@ public:
     std::string chunk;
   };
 
-  CurlFile(const boost::network::uri::uri uri);
-  ~CurlFile();
+  PgetFile(const boost::network::uri::uri uri);
+  ~PgetFile();
   static boost::mutex m_mutex;
 
-  void download(int splitSize);
+  void download(const int splitSize);
   boost::network::uri::uri getURI() const;
 
 private:
@@ -45,4 +39,4 @@ private:
 
 };
 
-#endif // __CURL_FILE_H_INCLUDED__ 
+#endif // __PGET_FILE_H_INCLUDED__ 

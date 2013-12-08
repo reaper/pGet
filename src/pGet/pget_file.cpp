@@ -1,21 +1,21 @@
-#include "curl_file.hpp"
+#include "pget_file.hpp"
 
-boost::mutex CurlFile::m_mutex;
+boost::mutex PgetFile::m_mutex;
 
 /**
- * @brief CurlFile constructor
+ * @brief PgetFile constructor
  * @param uri
  */
-CurlFile::CurlFile(const boost::network::uri::uri uri) {
+PgetFile::PgetFile(const boost::network::uri::uri uri) {
   m_uri = uri;
   curl_global_init(CURL_GLOBAL_ALL);
 }
 
 
 /**
- * @brief CurlFile destructor
+ * @brief PgetFile destructor
  */
-CurlFile::~CurlFile() {
+PgetFile::~PgetFile() {
   curl_global_cleanup();
 }
 
@@ -28,9 +28,9 @@ CurlFile::~CurlFile() {
  * @param stream
  * @return 
  */
-size_t CurlFile::fileWrite(void *buffer, size_t size, size_t nmemb, void *stream)
+size_t PgetFile::fileWrite(void *buffer, size_t size, size_t nmemb, void *stream)
 {
-  struct CurlFile::File *out = (struct CurlFile::File *)stream;
+  struct PgetFile::File *out = (struct PgetFile::File *)stream;
   boost::mutex::scoped_lock lock(m_mutex);
 
   if(out && !out->data) {
@@ -46,7 +46,7 @@ size_t CurlFile::fileWrite(void *buffer, size_t size, size_t nmemb, void *stream
  * @brief get URI
  * @return Poco::URI
  */
-boost::network::uri::uri CurlFile::getURI() const {
+boost::network::uri::uri PgetFile::getURI() const {
   return m_uri;
 }
 
@@ -55,37 +55,40 @@ boost::network::uri::uri CurlFile::getURI() const {
  * @brief download the file in threads
  * @param size
  */
-void CurlFile::download(int splitSize) {
+void PgetFile::download(const int splitSize) {
   int error;
   pthread_t tid[splitSize];
 
   const int fileSize = getFileSize();
-  const int chunk = fileSize/splitSize;
-  int currentChunk = chunk + 2;
-  std::string fileName = searchFileName();
+  const int chunk { fileSize/splitSize };
+  int currentChunk { chunk + 2 };
+  std::string fileName { searchFileName() };
 
-  CurlFile::ThreadArguments *arg1 = new CurlFile::ThreadArguments();
+
+  // First thread args
+  PgetFile::ThreadArguments *arg1 = new PgetFile::ThreadArguments();
   arg1->classRef = this;
   arg1->fileName = fileName;
   arg1->chunk = "0-" + std::to_string(currentChunk);
 
-  error = pthread_create(&tid[0], NULL, CurlFile::downloadChunk, arg1);
+  error = pthread_create(&tid[0], NULL, PgetFile::downloadChunk, arg1);
   if(0 != error)
-    fprintf(stderr, "Couldn't run thread number %d, errno %d\n", 0, error);
+    std::cout << "Couldn't run thread number 0 errno : " << error << std::endl;
 
+  // Run last threads
   for(int i = 1; i < splitSize; i++) {
     const std::string range = std::to_string(currentChunk + 1) + "-" + std::to_string(currentChunk + chunk);
 
-    CurlFile::ThreadArguments *arg = new CurlFile::ThreadArguments();
+    PgetFile::ThreadArguments *arg = new PgetFile::ThreadArguments();
     arg->classRef = this;
     arg->fileName = fileName;
     arg->chunk = range;
 
-    fprintf(stdout, "Launch tread:%d\n", i);
-    error = pthread_create(&tid[i], NULL, CurlFile::downloadChunk, arg);
+    std::cout << "Launch tread: " << i << std::endl;
+    error = pthread_create(&tid[i], NULL, PgetFile::downloadChunk, arg);
 
     if(0 != error) {
-      fprintf(stderr, "Couldn't run thread number %d, errno %d\n", i, error);
+      std::cout << "Couldn't run thread number " << i << " errno : " << error << std::endl;
     }
 
     currentChunk = currentChunk + chunk;
@@ -94,7 +97,7 @@ void CurlFile::download(int splitSize) {
   // Waiting for threads end
   for(int i = 0; i < splitSize; i++) {
     error = pthread_join(tid[i], NULL);
-    fprintf(stderr, "Thread %d terminated\n", i);
+    std::cout << "Thread " << i << " terminated" << std::endl;
   }
 }
 
@@ -102,20 +105,20 @@ void CurlFile::download(int splitSize) {
 /**
  * @brief Download the file
  */
-void *CurlFile::downloadChunk(void *args) {
-  CurlFile::ThreadArguments *fileArgs = (CurlFile::ThreadArguments*) args;
+void *PgetFile::downloadChunk(void *args) {
+  PgetFile::ThreadArguments *fileArgs = (PgetFile::ThreadArguments*) args;
 
-  fprintf(stdout, "Filename: %s, Chunk: %s\n", fileArgs->fileName.c_str(), fileArgs->chunk.c_str());
+  std::cout << "Filename: " << fileArgs->fileName.c_str() << ", Chunk: " << fileArgs->chunk.c_str() << std::endl;
 
   CURL *curl;
-  struct CurlFile::File file = {
+  struct PgetFile::File file = {
     fileArgs->fileName.c_str(),
     NULL,
   };
  
   curl = curl_easy_init();
   if(curl) {
-    curl_easy_setopt(curl, CURLOPT_URL, ((CurlFile *) fileArgs->classRef)->getURI().string().c_str());
+    curl_easy_setopt(curl, CURLOPT_URL, ((PgetFile *) fileArgs->classRef)->getURI().string().c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, fileWrite);
     curl_easy_setopt(curl, CURLOPT_RANGE, fileArgs->chunk.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &file);
@@ -135,14 +138,14 @@ void *CurlFile::downloadChunk(void *args) {
  * @brief Get the file size
  * @return 
  */
-double CurlFile::getFileSize() const {
-  double fileSize = 0.0;
+double PgetFile::getFileSize() const {
+  double fileSize { 0.0 };
   CURL *curl;
   CURLcode res;
  
   curl_global_init(CURL_GLOBAL_DEFAULT);
- 
   curl = curl_easy_init();
+
   if(curl) {
     curl_easy_setopt(curl, CURLOPT_URL, m_uri.string().c_str());
     curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
@@ -158,14 +161,14 @@ double CurlFile::getFileSize() const {
  
   curl_easy_cleanup(curl);
 
-  return 0.0;
+  return fileSize;
 }
 
 /**
  * @brief search fo the file name in the URI path
  * @return std::string
  */
-std::string CurlFile::searchFileName() const {
+std::string PgetFile::searchFileName() const {
   std::string fileName = m_uri.path();
 
   boost::regex base_regex("^.*\\/(.*)$");
