@@ -9,32 +9,13 @@ Dependencies
 
 - clang - http://clang.llvm.org
 - libcurl - http://curl.haxx.se/libcurl/
-- cpp-netlib - http://cpp-netlib.org/
-
-
-Init submodules
-===============
-
-```
-git submodule update --init
-```
-
-Build bundled dependencies
-==========================
-
-### CPP-NETLIB BUILD
-```
-cd lib/cpp-netlib
-CXXFLAGS="-ftemplate-depth=256" cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ .
-make -C libs/network/src && cd ../..
-```
 
 
 Build project
 =============
 ```
 scons
-./bin/curlP
+./bin/pGet_bin
 ```
 
 TODO
